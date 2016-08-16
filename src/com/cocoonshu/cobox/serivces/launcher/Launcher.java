@@ -173,6 +173,16 @@ public class Launcher {
 		System.out.println(" -help                              help information");
 	}
 
+	private void mainLoop() {
+		// TODO Update the states of the each service thread,
+		//      and display information on Console
+		
+		Runtime.getRuntime().addShutdownHook(new ShutdownHookThread());
+		while (true) {
+			
+		}
+	}
+	
 	/**
 	 * Main entry of Application
 	 * @param args
@@ -182,7 +192,9 @@ public class Launcher {
 		launcher.registerServices(LinkService.class)
 		        .registerServices(WebService.class);
 		launcher.execCommand(args);
+		launcher.mainLoop();
 		System.out.println();
 	}
+
 	
 }
