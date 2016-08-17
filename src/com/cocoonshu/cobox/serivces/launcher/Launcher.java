@@ -2,6 +2,7 @@ package com.cocoonshu.cobox.serivces.launcher;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 
 import com.cocoonshu.cobox.linkservice.LinkService;
 import com.cocoonshu.cobox.linkservice.WebService;
@@ -14,6 +15,7 @@ public class Launcher {
 	public static final int ERR_EXCEPTED_SERVICE  = 0x0003;
 	
 	private List<Class<? extends Service>> mRegisteredServices = null;
+	private Stack<Service>                 mRunningServices    = null;
 	
 	public static enum Command {
 		START_SERVICE("-start", 1),
@@ -41,6 +43,15 @@ public class Launcher {
 	
 	public Launcher() {
 		mRegisteredServices = new LinkedList<Class<? extends Service>>();
+		mRunningServices    = new Stack<Service>();
+		Runtime.getRuntime().addShutdownHook(new ShutdownHookThread() {
+
+			@Override
+			protected void onShutdown() {
+				System.out.println("Terminated...\n");
+			}
+			
+		});
 	}
 	
 	public Launcher registerServices(Class<? extends Service> service) {
@@ -104,26 +115,35 @@ public class Launcher {
 			}
 		}
 		
-		// Excute command
-		if (startServiceNames.size() > 0) {
-			StringBuilder builder = new StringBuilder();
-			for (Class clazz : startServiceNames) {
-				builder.append(" " + clazz.getSimpleName());
-			}
-			System.out.println("Start Services:" + builder.toString());
-			
-			// TODO Starting services
-		}
+		// Execute command
 		if (stopServiceNames.size() > 0) {
-			StringBuilder builder = new StringBuilder();
+			System.out.println();
+			System.out.println("Stop Services:");
 			for (Class clazz : stopServiceNames) {
-				builder.append(" " + clazz.getSimpleName());
+				// Stopping services
+				System.out.print("    " + clazz.getSimpleName() + " ... ");
+				Service service = stopService(clazz); 
+				if (service != null && service.isLaunched()) {
+					System.out.println("successed");
+				} else {
+					System.out.println("failed");
+				}
 			}
-			System.out.println("Stop Services:" + builder.toString());
-			
-			// TODO Stopping services
 		}
-		
+		if (startServiceNames.size() > 0) {
+			System.out.println();
+			System.out.println("Start Services:");
+			for (Class clazz : startServiceNames) {
+				// Starting services
+				System.out.print("    " + clazz.getSimpleName() + " ... ");
+				Service service = startService(clazz); 
+				if (service != null && !service.isServering()) {
+					System.out.println("successed");
+				} else {
+					System.out.println("failed");
+				}
+			}
+		}
 	}
 
 	private Class getClassObjectFromName(String name) {
@@ -138,6 +158,57 @@ public class Launcher {
 		return null;
 	}
 
+	private Service startService(Class<? extends Service> serviceClass) {
+		Service service = null;
+		if (!hasSameRunningServiceClazz(serviceClass)) {
+			try {
+				service = serviceClass.newInstance();
+				synchronized (mRunningServices) {
+					mRunningServices.push(service);
+				}
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		if (service != null) {
+			service.launch();
+		}
+		return service;
+	}
+	
+	private Service stopService(Class<? extends Service> serviceClass) {
+		Service service = null;
+		if (hasSameRunningServiceClazz(serviceClass)) {
+			synchronized (mRunningServices) {
+				Stack<Service> runningServices = mRunningServices;
+				for (Service runningService : runningServices) {
+					if (runningService.getClass().equals(serviceClass)) {
+						service = runningService;
+						runningServices.remove(runningService);
+					}
+				}
+			}
+		}
+		if (service != null) {
+			service.terminate();
+		}
+		return service;
+	}
+	
+	private boolean hasSameRunningServiceClazz(Class<? extends Service> serviceClass) {
+		synchronized (mRunningServices) {
+			Stack<Service> runningServices = mRunningServices;
+			for (Service service : runningServices) {
+				if (service.getClass().equals(serviceClass)) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+	
 	private void printError(int error, String arg) {
 		switch (error) {
 		case ERR_EXCEPTED_OPTION:
@@ -159,6 +230,7 @@ public class Launcher {
 	}
 
 	private void listServicesList() {
+		System.out.println();
 		System.out.println("Registered services:");
 		for (int i = 0; i < mRegisteredServices.size(); i++) {
 			System.out.println("    " + mRegisteredServices.get(i).getSimpleName());
@@ -166,6 +238,7 @@ public class Launcher {
 	}
 
 	private void printHelpInformation() {
+		System.out.println();
 		System.out.println("Usage: launcher OPTION [Arguments]");
 		System.out.println(" -list                              list services");
 		System.out.println(" -start [service1, [service2] ...]  start services");
@@ -177,7 +250,6 @@ public class Launcher {
 		// TODO Update the states of the each service thread,
 		//      and display information on Console
 		
-		Runtime.getRuntime().addShutdownHook(new ShutdownHookThread());
 		while (true) {
 			
 		}
@@ -193,8 +265,6 @@ public class Launcher {
 		        .registerServices(WebService.class);
 		launcher.execCommand(args);
 		launcher.mainLoop();
-		System.out.println();
 	}
 
-	
 }
