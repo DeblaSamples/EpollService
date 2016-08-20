@@ -13,11 +13,21 @@ public class Log {
 	private static       boolean     sIsLogFileOutput = true;
 	private static       PrintStream sLogStream       = null;
 	
-	private static void openLogFile() {
+	private static void openLogFile(String dir) {
 		closeLogFile();
 		Calendar calendar = Calendar.getInstance();
 		try {
-			String localePath = System.getProperty("java.class.path") + "/";
+			String localePath = null;
+			if (dir == null) {
+				localePath = System.getProperty("java.class.path") + "/";
+				String[] localePaths = localePath.split(";");
+				if (localePaths != null || localePath.length() > 0) {
+					localePath = localePaths[0];
+				}
+			} else {
+				localePath = dir + "/";
+			}
+			
 			File outputFile = new File(String.format(localePath + LOG_FILE_NAME,
 					calendar.get(Calendar.YEAR),
 					calendar.get(Calendar.MONTH) + 1,
@@ -26,6 +36,7 @@ public class Log {
 					calendar.get(Calendar.MINUTE),
 					calendar.get(Calendar.SECOND)));
 			if (!outputFile.exists()) {
+				System.out.println("[I] Create log file on " + outputFile.getAbsolutePath());
 				outputFile.getParentFile().mkdirs();
 				outputFile.createNewFile();
 			}
@@ -51,10 +62,19 @@ public class Log {
 		sIsConsoleOutput = enabled;
 	}
 	
+	public static void setLogFileOutput(boolean enabled, String logDirectory) {
+		sIsLogFileOutput = enabled;
+		if (sIsLogFileOutput) {
+			openLogFile(logDirectory);
+		} else {
+			closeLogFile();
+		}
+	}
+	
 	public static void setLogFileOutput(boolean enabled) {
 		sIsLogFileOutput = enabled;
 		if (sIsLogFileOutput) {
-			openLogFile();
+			openLogFile(null);
 		} else {
 			closeLogFile();
 		}
