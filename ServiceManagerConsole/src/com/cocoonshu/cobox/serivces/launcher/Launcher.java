@@ -7,12 +7,14 @@ import java.util.Stack;
 import com.cocoonshu.cobox.linkservice.LinkService;
 import com.cocoonshu.cobox.linkservice.WebService;
 import com.cocoonshu.cobox.serivces.Service;
+import com.cocoonshu.cobox.utils.Log;
 
 public class Launcher {
 	
-	public static final int ERR_EXCEPTED_ARGUMENT = 0x0001;
-	public static final int ERR_EXCEPTED_OPTION   = 0x0002;
-	public static final int ERR_EXCEPTED_SERVICE  = 0x0003;
+	public static final String TAG                   = "Launcher";
+	public static final int    ERR_EXCEPTED_ARGUMENT = 0x0001;
+	public static final int    ERR_EXCEPTED_OPTION   = 0x0002;
+	public static final int    ERR_EXCEPTED_SERVICE  = 0x0003;
 	
 	private List<Class<? extends Service>> mRegisteredServices = null;
 	private Stack<Service>                 mRunningServices    = null;
@@ -44,11 +46,16 @@ public class Launcher {
 	public Launcher() {
 		mRegisteredServices = new LinkedList<Class<? extends Service>>();
 		mRunningServices    = new Stack<Service>();
+		
+		Log.setConsoleOutput(true);
+		Log.setLogFileOutput(true);
 		Runtime.getRuntime().addShutdownHook(new ShutdownHookThread() {
 
 			@Override
 			protected void onShutdown() {
-				System.out.println("Terminated...\n");
+				Log.i(TAG, "Terminated...\n");
+				Log.setConsoleOutput(false);
+				Log.setLogFileOutput(false);
 			}
 			
 		});
@@ -117,30 +124,30 @@ public class Launcher {
 		
 		// Execute command
 		if (stopServiceNames.size() > 0) {
-			System.out.println();
-			System.out.println("Stop Services:");
+			Log.println();
+			Log.i(TAG, "Stop Services:");
 			for (Class clazz : stopServiceNames) {
 				// Stopping services
-				System.out.print("    " + clazz.getSimpleName() + " ... ");
+				Log.i(TAG, "    " + clazz.getSimpleName() + " ... ", true);
 				Service service = stopService(clazz); 
 				if (service != null && service.isLaunched()) {
-					System.out.println("successed");
+					Log.println("successed");
 				} else {
-					System.out.println("failed");
+					Log.println("failed");
 				}
 			}
 		}
 		if (startServiceNames.size() > 0) {
-			System.out.println();
-			System.out.println("Start Services:");
+			Log.println();
+			Log.i(TAG, "Start Services:");
 			for (Class clazz : startServiceNames) {
 				// Starting services
-				System.out.print("    " + clazz.getSimpleName() + " ... ");
+				Log.i(TAG, "    " + clazz.getSimpleName() + " ... ", true);
 				Service service = startService(clazz); 
 				if (service != null && !service.isServering()) {
-					System.out.println("successed");
+					Log.println("successed");
 				} else {
-					System.out.println("failed");
+					Log.println("failed");
 				}
 			}
 		}
@@ -158,6 +165,11 @@ public class Launcher {
 		return null;
 	}
 
+	/**
+	 * FIXME This method should call the Service Manager Process to start service
+	 * @param serviceClass
+	 * @return
+	 */
 	private Service startService(Class<? extends Service> serviceClass) {
 		Service service = null;
 		if (!hasSameRunningServiceClazz(serviceClass)) {
@@ -178,6 +190,11 @@ public class Launcher {
 		return service;
 	}
 	
+	/**
+	 * FIXME This method should call the Service Manager Process to stop service
+	 * @param serviceClass
+	 * @return
+	 */
 	private Service stopService(Class<? extends Service> serviceClass) {
 		Service service = null;
 		if (hasSameRunningServiceClazz(serviceClass)) {
@@ -212,43 +229,47 @@ public class Launcher {
 	private void printError(int error, String arg) {
 		switch (error) {
 		case ERR_EXCEPTED_OPTION:
-			System.out.println("Error: Excepted option: " + arg);
+			Log.e(TAG, "Error: Excepted option: " + arg);
 			break;
 			
 		case ERR_EXCEPTED_SERVICE:
-			System.out.println("Error: Excepted service: " + arg);
+			Log.e(TAG, "Error: Excepted service: " + arg);
 			break;
 			
 		case ERR_EXCEPTED_ARGUMENT:
-			System.out.println("Error: Excepted argument: " + arg);
+			Log.e(TAG, "Error: Excepted argument: " + arg);
 			break;
 
 		default:
-			System.out.println("Error: Unknown error");
+			Log.e(TAG, "Error: Unknown error");
 			break;
 		}
 	}
 
 	private void listServicesList() {
-		System.out.println();
-		System.out.println("Registered services:");
+		Log.println();
+		Log.i(TAG, "Registered services:");
 		for (int i = 0; i < mRegisteredServices.size(); i++) {
-			System.out.println("    " + mRegisteredServices.get(i).getSimpleName());
+			Log.i(TAG, "    " + mRegisteredServices.get(i).getSimpleName());
 		}
 	}
 
 	private void printHelpInformation() {
-		System.out.println();
-		System.out.println("Usage: launcher OPTION [Arguments]");
-		System.out.println(" -list                              list services");
-		System.out.println(" -start [service1, [service2] ...]  start services");
-		System.out.println(" -stop  [service1, [service2] ...]  stop services");
-		System.out.println(" -help                              help information");
+		Log.println();
+		Log.i(TAG, "Usage: launcher OPTION [Arguments]");
+		Log.i(TAG, " -list                              list services");
+		Log.i(TAG, " -start [service1, [service2] ...]  start services");
+		Log.i(TAG, " -stop  [service1, [service2] ...]  stop services");
+		Log.i(TAG, " -help                              help information");
 	}
 
 	private void mainLoop() {
 		// TODO Update the states of the each service thread,
 		//      and display information on Console
+		
+		// STEP1 Launch Service Manager Process if the process isn't launch
+		// STEP2 Connect to the print stream of the Service Manager Process 
+		// STEP3 Output print stream from Service Manager Process in loop
 		
 		while (true) {
 			

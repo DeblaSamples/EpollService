@@ -13,6 +13,18 @@ public class LinkService extends Service {
 		
 	}
 
+	@Override
+	protected void onStart() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	protected void onDestory() {
 		// TODO Auto-generated method stub
 		

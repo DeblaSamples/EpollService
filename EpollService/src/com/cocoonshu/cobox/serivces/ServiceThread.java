@@ -71,11 +71,9 @@ public class ServiceThread extends Thread {
 		mThreadState = ThreadState_Launched;
 		fireThreadLaunchedEvent();
 		
-		try {
-			fireThreadRunEvent();
-		} catch (InterruptedException exp) {
-			
-		}
+		fireThreadRunEvent();
+		
+		// TODO Stop Service thread and fire event
 	}
 	
 	protected OnStateChangedListener getOnStateChangedListener() {
