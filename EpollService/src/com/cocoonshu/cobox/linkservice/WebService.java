@@ -1,6 +1,7 @@
 package com.cocoonshu.cobox.linkservice;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.channels.AsynchronousServerSocketChannel;
 
@@ -8,11 +9,12 @@ import com.cocoonshu.cobox.serivces.Service;
 import com.cocoonshu.cobox.utils.Log;
 
 
-public class WebService extends Service {
+public class WebService extends Service implements Serializable {
 
-	private static final String                          TAG            = "WebService";
-	private static final int                             ListenPort     = 80;
-	private              AsynchronousServerSocketChannel mServerChannel = null;
+	private static final String                          TAG              = "WebService";
+	private static final long                            serialVersionUID = 54604139032979549L;
+	private static final int                             ListenPort       = 80;
+	private              AsynchronousServerSocketChannel mServerChannel   = null;
 	
 	@Override
 	protected void onCreate() {
