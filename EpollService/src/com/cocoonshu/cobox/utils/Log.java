@@ -9,6 +9,7 @@ import java.util.Calendar;
 public class Log {
 
 	private static final String      LOG_FILE_NAME    = "Log_%04d%02d%02d_%02d%02d%02d.log";
+	private static       boolean     sIsDebugable     = false;
 	private static       boolean     sIsConsoleOutput = true;
 	private static       boolean     sIsLogFileOutput = true;
 	private static       PrintStream sLogStream       = null;
@@ -149,9 +150,13 @@ public class Log {
 	public static void e(String tag, String msg, Throwable throwable) {
 		String log = "[E][" + tag + "] " + msg;
 		if (sIsConsoleOutput) {
-			System.out.println(log);
-			if (throwable != null) {
-				throwable.printStackTrace();
+			if (sIsDebugable) {
+				System.out.println(log);
+				if (throwable != null) {
+					throwable.printStackTrace();
+				}
+			} else {
+				System.out.println(log + (throwable != null ? "\n\t" + throwable.getMessage() : ""));
 			}
 		}
 		if (sIsLogFileOutput && sLogStream != null) {

@@ -1,7 +1,9 @@
 package com.cocoonshu.cobox.serivces.launcher;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
+import java.rmi.ConnectException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -29,7 +31,9 @@ public class Launcher {
 		START_SERVICE("-start", 1),
 		STOP_SERVICE ("-stop",  2),
 		LIST_SERVICES("-list",  3),
-		HELP         ("-help",  0);
+		HELP         ("-help",  0),
+		QUIT         ("quit",  -1),
+		EXIT         ("exit",  -1);
 		
 		private String mName = null;
 		private int    mId   = 0;
@@ -69,12 +73,18 @@ public class Launcher {
 		String rmiUrl = RMIService.bindString("localhost");
 		try {
 			mRMIClient = (IRMIService) Naming.lookup(RMIService.bindString("localhost"));
+		} catch (ConnectException e) {
+			Log.e(TAG, "RMI service isn't resigter: " + rmiUrl, e);
+			System.exit(-1);
 		} catch (NotBoundException e) {
 			Log.e(TAG, "RMI service isn't resigter: " + rmiUrl, e);
+			System.exit(-1);
 		} catch (RemoteException e) {
 			Log.e(TAG, "Cannot bind RMI service", e);
+			System.exit(-1);
 		} catch (MalformedURLException e) {
 			Log.e(TAG, "Cannot bind RMI service with wrong RMI url: " + rmiUrl, e);
+			System.exit(-1);
 		}
 
 		Log.i(TAG, "RMI client bound, RMI: " + rmiUrl);
@@ -230,11 +240,24 @@ public class Launcher {
 		// STEP1 Launch Service Manager Process if the process isn't launch
 		// STEP2 Connect to the print stream of the Service Manager Process 
 		// STEP3 Output print stream from Service Manager Process in loop
-		
+
+		int    inputCount  = 0;
+		byte[] inputBuffer = new byte[1024];
 		while (true) {
 			try {
+				inputCount = System.in.read(inputBuffer);
+				if (inputCount > 0) {
+					String command = new String(inputBuffer).trim();
+					if (command.equalsIgnoreCase(Command.QUIT.toString())
+					 || command.equalsIgnoreCase(Command.EXIT.toString())) {
+						System.exit(0);
+					}
+				}
+				
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
