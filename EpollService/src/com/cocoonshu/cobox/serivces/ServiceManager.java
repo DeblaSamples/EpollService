@@ -7,8 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
-import com.cocoonshu.cobox.linkservice.LinkService;
-import com.cocoonshu.cobox.linkservice.WebService;
+import com.cocoonshu.cobox.serivces.webservice.WebService;
+import com.cocoonshu.cobox.service.linkservice.LinkService;
 import com.cocoonshu.cobox.utils.Log;
 
 public class ServiceManager implements IRMIService {

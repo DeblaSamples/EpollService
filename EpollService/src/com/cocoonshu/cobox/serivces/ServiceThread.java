@@ -1,5 +1,7 @@
 package com.cocoonshu.cobox.serivces;
 
+import com.cocoonshu.cobox.serivces.ServiceThread.OnStateChangedListener;
+
 public class ServiceThread extends Thread {
 
 	private static final int ThreadState_Initialized = 0;
@@ -21,6 +23,14 @@ public class ServiceThread extends Thread {
 	private Object                 mTerminatingLock        = new Object();
 	private OnStateChangedListener mOnStateChangedListener = null;
 	
+	public ServiceThread() {
+		
+	}
+	
+	public ServiceThread(OnStateChangedListener listener) {
+		setOnStateChangedListener(listener);
+	}
+
 	public void setOnStateChangedListener(OnStateChangedListener listener) {
 		mOnStateChangedListener = listener;
 	}
@@ -34,7 +44,14 @@ public class ServiceThread extends Thread {
 	}
 	
 	public void terminate() {
-		
+		if (mThreadState == ThreadState_Launching
+				|| mThreadState == ThreadState_Launched) {
+			if (this.isAlive()) {
+				this.interrupt();
+			}
+			mThreadState = ThreadState_Terminating;
+			fireThreadTerminatedEvent();
+		}
 	}
 	
 	public void waitForLaunched() {
@@ -70,12 +87,23 @@ public class ServiceThread extends Thread {
 		}
 		mThreadState = ThreadState_Launched;
 		fireThreadLaunchedEvent();
-		
-		fireThreadRunEvent();
-		
+
+		do {
+			try {
+				runMessageLoop();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		} while (mThreadState != ThreadState_Terminating);
+
 		// TODO Stop Service thread and fire event
+		fireThreadTerminatedEvent();
 	}
 	
+	private void runMessageLoop() throws InterruptedException {
+		this.wait();
+	}
+
 	protected OnStateChangedListener getOnStateChangedListener() {
 		return mOnStateChangedListener;
 	}

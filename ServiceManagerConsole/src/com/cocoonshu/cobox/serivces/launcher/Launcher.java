@@ -11,11 +11,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
-import com.cocoonshu.cobox.linkservice.LinkService;
-import com.cocoonshu.cobox.linkservice.WebService;
 import com.cocoonshu.cobox.serivces.IRMIService;
 import com.cocoonshu.cobox.serivces.RMIService;
 import com.cocoonshu.cobox.serivces.Service;
+import com.cocoonshu.cobox.serivces.webservice.WebService;
+import com.cocoonshu.cobox.service.linkservice.LinkService;
 import com.cocoonshu.cobox.utils.Log;
 
 public class Launcher {
@@ -251,6 +251,8 @@ public class Launcher {
 					if (command.equalsIgnoreCase(Command.QUIT.toString())
 					 || command.equalsIgnoreCase(Command.EXIT.toString())) {
 						System.exit(0);
+					} else {
+						Log.i(TAG, "No command: " + command);
 					}
 				}
 				

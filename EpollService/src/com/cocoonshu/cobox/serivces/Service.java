@@ -1,5 +1,7 @@
 package com.cocoonshu.cobox.serivces;
 
+import com.cocoonshu.cobox.serivces.ServiceThread.OnStateChangedListener;
+
 public abstract class Service {
 
 	public static enum ServiceState {
@@ -10,8 +12,9 @@ public abstract class Service {
 		Terminated
 	}
 	
-	private ServiceState  mServiceState  = null;
-	private ServiceThread mServiceThread = null;
+	private ServiceState           mServiceState           = null;
+	private ServiceThread          mServiceThread          = null;
+	private OnStateChangedListener mOnStateChangedListener = null;
 	
 	protected abstract void onCreate();
 	protected abstract void onStart();
@@ -20,6 +23,42 @@ public abstract class Service {
 	
 	public Service() {
 		mServiceState = ServiceState.Initialized;
+		setupServiceThreadListener();
+	}
+	
+	private void setupServiceThreadListener() {
+		mOnStateChangedListener = new OnStateChangedListener() {
+			
+			@Override
+			public void onThreadLaunching() {
+				mServiceState = ServiceState.Launching;
+				onCreate();
+			}
+			
+			@Override
+			public void onThreadLaunched() {
+				mServiceState = ServiceState.Servering;
+				onStart();
+			}
+			
+			@Override
+			public void onThreadRun() {
+				mServiceState = ServiceState.Servering;
+			}
+			
+			@Override
+			public void onThreadTerminating() {
+				mServiceState = ServiceState.Terminating;
+				onStop();
+			}
+			
+			@Override
+			public void onThreadTerminated() {
+				mServiceState = ServiceState.Terminated;
+				onDestory();
+			}
+			
+		};
 	}
 	
 	public void launch() {
@@ -32,9 +71,8 @@ public abstract class Service {
 				mServiceThread.terminate();
 				mServiceThread.waitForTerminated();
 			}
-			mServiceThread = new ServiceThread();
+			mServiceThread = new ServiceThread(mOnStateChangedListener);
 			mServiceThread.launch();
-			mServiceState = ServiceState.Launching;
 		}
 	}
 	
@@ -45,7 +83,6 @@ public abstract class Service {
 			if (mServiceThread != null) {
 				mServiceThread.terminate();
 			}
-			mServiceState = ServiceState.Terminating;
 		}
 	}
 	

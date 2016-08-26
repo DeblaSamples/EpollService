@@ -9,6 +9,7 @@ import java.util.Calendar;
 public class Log {
 
 	private static final String      LOG_FILE_NAME    = "Log_%04d%02d%02d_%02d%02d%02d.log";
+	private static final String      LOG_DIR_NAME     = "Log";
 	private static       boolean     sIsDebugable     = false;
 	private static       boolean     sIsConsoleOutput = true;
 	private static       boolean     sIsLogFileOutput = true;
@@ -23,11 +24,13 @@ public class Log {
 				localePath = System.getProperty("java.class.path") + "/";
 				String[] localePaths = localePath.split(";");
 				if (localePaths != null || localePath.length() > 0) {
-					localePath = localePaths[0];
+					localePath = localePaths[0] + "/";
 				}
 			} else {
 				localePath = dir + "/";
 			}
+			
+			localePath = LOG_DIR_NAME + "/";
 			
 			File outputFile = new File(String.format(localePath + LOG_FILE_NAME,
 					calendar.get(Calendar.YEAR),

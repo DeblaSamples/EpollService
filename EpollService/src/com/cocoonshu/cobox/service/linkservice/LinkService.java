@@ -1,4 +1,4 @@
-package com.cocoonshu.cobox.linkservice;
+package com.cocoonshu.cobox.service.linkservice;
 
 import java.io.Serializable;
 import java.nio.channels.AsynchronousServerSocketChannel;
